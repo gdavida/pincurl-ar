@@ -448,37 +448,6 @@
             }, 5000);
         });
 
-        // Track NFT marker events
-        AFRAME.registerComponent('nft-listener', {
-            init: function () {
-                // Works for both marker and NFT
-                const tracker = document.querySelector('a-nft') || document.querySelector('a-marker');
-                
-                if (tracker) {
-                    tracker.addEventListener('markerFound', () => {
-                        console.log('Target detected! Starting animation...');
-                        document.querySelector('.instructions').innerHTML = '✨ Target found! Fixing spelling...';
-                        document.getElementById('status').style.display = 'block';
-                        updateDebug('Target detected - Animation playing');
-                        
-                        // Trigger haptic feedback
-                        if (navigator.vibrate) {
-                            navigator.vibrate(200);
-                        }
-                        
-                        // Play success sound
-                        playCorrectSound();
-                    });
-
-                    tracker.addEventListener('markerLost', () => {
-                        console.log('Target lost from view');
-                        document.querySelector('.instructions').innerHTML = '📷 Point your camera at the target';
-                        document.getElementById('status').style.display = 'none';
-                        updateDebug('Target lost - Keep it in view');
-                    });
-                }
-            }
-        });
 
         // Add the component to the tracker element after scene loads
         document.addEventListener('DOMContentLoaded', () => {
