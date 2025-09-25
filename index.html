@@ -157,6 +157,34 @@
         Debug: Initializing...
     </div>
 
+    <!-- Register component BEFORE scene -->
+    <script>
+        // Register the marker listener component BEFORE the scene
+        AFRAME.registerComponent('marker-handler', {
+            init: function () {
+                console.log('Marker handler initialized');
+                const el = this.el;
+                
+                el.addEventListener('markerFound', () => {
+                    console.log('Marker detected! Starting animation...');
+                    document.querySelector('.instructions').innerHTML = '✨ Marker found! Fixing spelling...';
+                    document.getElementById('status').style.display = 'block';
+                    
+                    // Trigger haptic feedback
+                    if (navigator.vibrate) {
+                        navigator.vibrate(200);
+                    }
+                });
+
+                el.addEventListener('markerLost', () => {
+                    console.log('Marker lost from view');
+                    document.querySelector('.instructions').innerHTML = '📷 Point your camera at the target';
+                    document.getElementById('status').style.display = 'none';
+                });
+            }
+        });
+    </script>
+
     <!-- AR Scene with NFT tracking -->
     <a-scene
         id="arScene"
@@ -279,17 +307,17 @@
                 <!-- Floating hearts and flowers -->
                 <a-entity id="floatingElements">
                     <a-text value="💝" position="-2 -1 0" rotation="-90 0 0" width="5" opacity="0"
-                        animation="property: position; to: -2 2 0; dur: 4000; delay: 3500; easing: easeOutQuad"
+                        animation="property: position; to: -2 2 0; dur: 4000; delay: 3500"
                         animation__fade="property: opacity; from: 0; to: 1; dur: 500; delay: 3500"
                         animation__fadeout="property: opacity; to: 0; dur: 500; delay: 7000"></a-text>
                     
                     <a-text value="🌸" position="1.5 -1 0" rotation="-90 0 0" width="5" opacity="0"
-                        animation="property: position; to: 1.5 2.5 0; dur: 4500; delay: 3700; easing: easeOutQuad"
+                        animation="property: position; to: 1.5 2.5 0; dur: 4500; delay: 3700"
                         animation__fade="property: opacity; from: 0; to: 1; dur: 500; delay: 3700"
                         animation__fadeout="property: opacity; to: 0; dur: 500; delay: 7500"></a-text>
                     
                     <a-text value="💐" position="0 -1 0" rotation="-90 0 0" width="5" opacity="0"
-                        animation="property: position; to: 0 3 0; dur: 5000; delay: 3900; easing: easeOutQuad"
+                        animation="property: position; to: 0 3 0; dur: 5000; delay: 3900"
                         animation__fade="property: opacity; from: 0; to: 1; dur: 500; delay: 3900"
                         animation__fadeout="property: opacity; to: 0; dur: 500; delay: 8000"></a-text>
                 </a-entity>
