@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>AR February Auto-Correction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <!-- AR.js with NFT and A-Frame -->
+    <script src="https://cdn.jsdelivr.net/gh/aframevr/aframe@1.3.0/dist/aframe-master.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    
+    <style>
+        .arjs-loader {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .arjs-loader div {
+            text-align: center;
+            font-size: 1.25em;
+            color: white;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 10px;
+        }
+
+        .loader-animation {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .instructions {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            z-index: 1;
+            text-align: center;
+            font-size: 14px;
+            max-width: 80%;
+        }
+
+        .status-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            z-index: 1;
+            display: none;
+        }
+
+        #startButton {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 10000;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: block;
+        }
+
+        #startButton:hover {
+            transform: translate(-50%, -50%) scale(1.05);
+        }
+
+        .debug-info {
+            position: fixed;
+            bottom: 60px;
+            left: 10px;
+            background: rgba(0,0,0,0.7);
+            color: #00ff00;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            border-radius: 5px;
+            z-index: 1;
+            display: none;
+        }
+    </style>
+</head>
+<body style="margin: 0; overflow: hidden;">
+    <!-- Loading screen -->
+    <div class="arjs-loader">
+        <div class="loader-animation"></div>
+        <div>
+            <p><strong>Loading AR Experience...</strong></p>
+            <p style="font-size: 0.9em; opacity: 0.8;">Preparing to detect your February calendar...</p>
+        </div>
+    </div>
+
+    <!-- Start Button -->
+    <button id="startButton" onclick="startAR()">📷 Start AR Camera</button>
+
+    <!-- Instructions -->
+    <div class="instructions" style="display: none;" id="instructions">
+        📷 Point your camera at the FEBRUARY calendar page
+    </div>
+
+    <!-- Status indicator -->
+    <div class="status-indicator" id="status">
+        Calendar detected! Watch the magic ✨
+    </div>
+
+    <!-- Debug info -->
+    <div class="debug-info" id="debug">
+        Debug: Initializing...
+    </div>
+
+    <!-- AR Scene with NFT tracking -->
+    <a-scene
+        id="arScene"
+        vr-mode-ui="enabled: false"
+        embedded
+        renderer="logarithmicDepthBuffer: true;"
+        arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        style="display: none;"
+    >
+        <!-- NFT Image Tracking for your calendar -->
+        <!-- The URL should point to your NFT files WITHOUT the file extension -->
+        <a-nft
+            type="nft"
+            url="./nft/calendar"
+            smooth="true"
+            smoothCount="10"
+            smoothTolerance="0.01"
+            smoothThreshold="5"
+        >
+            <!-- Container for all animations -->
+            <a-entity id="ar-content">
+                
+                <!-- Original misspelled text that fades out -->
+                <a-text
+                    id="wrongText"
+                    value="FEBURARY"
+                    position="0 0 0"
+                    rotation="-90 0 0"
+                    color="#FF0000"
+                    font="kelsonsans"
+                    width="12"
+                    align="center"
+                    opacity="1"
+                    animation="property: opacity; to: 0.3; dur: 1500; delay: 1000; easing: easeInOutQuad"
+                ></a-text>
+
+                <!-- Red X or strike effect -->
+                <a-plane
+                    id="strikeEffect"
+                    position="0 0 -0.05"
+                    rotation="-90 0 0"
+                    width="4"
+                    height="0.1"
+                    color="#FF0000"
+                    opacity="0"
+                    animation="property: opacity; to: 0.8; dur: 500; delay: 500"
+                    animation__scale="property: scale; from: 0.1 0.1 0.1; to: 1 1 1; dur: 500; delay: 500; easing: easeOutBack"
+                ></a-plane>
+
+                <!-- Correct spelling that fades in with glow effect -->
+                <a-text
+                    id="correctText"
+                    value="FEBRUARY"
+                    position="0 0 0.1"
+                    rotation="-90 0 0"
+                    color="#00FF00"
+                    font="kelsonsans"
+                    width="14"
+                    align="center"
+                    opacity="0"
+                    animation="property: opacity; to: 1; dur: 1500; delay: 1500; easing: easeInOutQuad"
+                    animation__scale="property: scale; from: 0.5 0.5 0.5; to: 1.2 1.2 1.2; dur: 1000; delay: 1500; easing: easeOutElastic"
+                    animation__glow="property: width; from: 14; to: 15; dur: 1000; delay: 2500; loop: true; dir: alternate"
+                ></a-text>
+
+                <!-- Sparkle effect around correct text -->
+                <a-entity id="sparkles" position="0 0 0.2">
+                    <a-text value="✨" position="-2 0 0" rotation="-90 0 0" width="5" opacity="0"
+                        animation="property: opacity; to: 1; dur: 300; delay: 2000"
+                        animation__rotate="property: rotation; to: -90 0 360; dur: 2000; delay: 2000"></a-text>
+                    <a-text value="✨" position="2 0 0" rotation="-90 0 0" width="5" opacity="0"
+                        animation="property: opacity; to: 1; dur: 300; delay: 2100"
+                        animation__rotate="property: rotation; to: -90 0 -360; dur: 2000; delay: 2100"></a-text>
+                    <a-text value="⭐" position="0 1.5 0" rotation="-90 0 0" width="4" opacity="0"
+                        animation="property: opacity; to: 1; dur: 300; delay: 2200"
+                        animation__pulse="property: scale; from: 1 1 1; to: 1.5 1.5 1.5; dur: 1000; delay: 2200; loop: true; dir: alternate"></a-text>
+                </a-entity>
+
+                <!-- Inspirational message sequence -->
+                <a-text
+                    id="message1"
+                    value="✓ Spell Check Complete!"
+                    position="0 -1.5 0"
+                    rotation="-90 0 0"
+                    color="#4CAF50"
+                    font="kelsonsans"
+                    width="8"
+                    align="center"
+                    opacity="0"
+                    animation="property: opacity; to: 1; dur: 800; delay: 2500"
+                    animation__slideIn="property: position; from: -3 -1.5 0; to: 0 -1.5 0; dur: 800; delay: 2500; easing: easeOutBack"
+                ></a-text>
+
+                <a-text
+                    id="message2"
+                    value="February: A Month of Love & Growth 💜"
+                    position="0 -2.5 0"
+                    rotation="-90 0 0"
+                    color="#E91E63"
+                    font="kelsonsans"
+                    width="7"
+                    align="center"
+                    opacity="0"
+                    animation="property: opacity; to: 1; dur: 1000; delay: 3300"
+                    animation__bounce="property: position; from: 0 -2.5 -1; to: 0 -2.5 0; dur: 1000; delay: 3300; easing: easeOutBounce"
+                ></a-text>
+
+                <a-text
+                    id="message3"
+                    value="28 Days of New Possibilities"
+                    position="0 -3.5 0"
+                    rotation="-90 0 0"
+                    color="#9C27B0"
+                    font="kelsonsans"
+                    width="6"
+                    align="center"
+                    opacity="0"
+                    animation="property: opacity; to: 1; dur: 1000; delay: 4000"
+                ></a-text>
+
+                <!-- Floating hearts and flowers -->
+                <a-entity id="floatingElements">
+                    <a-text value="💝" position="-2 -1 0" rotation="-90 0 0" width="5" opacity="0"
+                        animation="property: position; to: -2 2 0; dur: 4000; delay: 3500; easing: easeOutQuad"
+                        animation__fade="property: opacity; from: 0; to: 1; dur: 500; delay: 3500"
+                        animation__fadeout="property: opacity; to: 0; dur: 500; delay: 7000"></a-text>
+                    
+                    <a-text value="🌸" position="1.5 -1 0" rotation="-90 0 0" width="5" opacity="0"
+                        animation="property: position; to: 1.5 2.5 0; dur: 4500; delay: 3700; easing: easeOutQuad"
+                        animation__fade="property: opacity; from: 0; to: 1; dur: 500; delay: 3700"
+                        animation__fadeout="property: opacity; to: 0; dur: 500; delay: 7500"></a-text>
+                    
+                    <a-text value="💐" position="0 -1 0" rotation="-90 0 0" width="5" opacity="0"
+                        animation="property: position; to: 0 3 0; dur: 5000; delay: 3900; easing: easeOutQuad"
+                        animation__fade="property: opacity; from: 0; to: 1; dur: 500; delay: 3900"
+                        animation__fadeout="property: opacity; to: 0; dur: 500; delay: 8000"></a-text>
+                </a-entity>
+
+            </a-entity>
+        </a-marker>
+        
+        <!-- OPTION B: NFT FOR YOUR CALENDAR (Uncomment when ready) -->
+        <!--
+        <a-nft
+            type="nft"
+            url="./nft/calendar"
+            smooth="true"
+            smoothCount="10"
+            smoothTolerance="0.01"
+            smoothThreshold="5"
+        >
+            [Copy all the a-entity content from above here]
+        </a-nft>
+        -->
+
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        let arStarted = false;
+        
+        // Start AR function
+        function startAR() {
+            if (arStarted) return;
+            arStarted = true;
+            
+            document.getElementById('startButton').style.display = 'none';
+            document.getElementById('arScene').style.display = 'block';
+            document.getElementById('instructions').style.display = 'block';
+            
+            // Update debug
+            updateDebug('AR Started - Looking for calendar...');
+            
+            // Request camera permissions if needed
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function(stream) {
+                        console.log('Camera access granted');
+                        updateDebug('Camera active - Point at calendar');
+                    })
+                    .catch(function(err) {
+                        console.error('Camera access denied:', err);
+                        updateDebug('Error: Camera access denied');
+                        alert('Please allow camera access to use AR features');
+                    });
+            }
+        }
+
+        // Debug helper
+        function updateDebug(message) {
+            const debug = document.getElementById('debug');
+            if (debug) {
+                debug.textContent = `Debug: ${message}`;
+                console.log(message);
+            }
+        }
+
+        // Hide loader when scene is ready
+        window.addEventListener('arjs-video-loaded', () => {
+            setTimeout(() => {
+                document.querySelector('.arjs-loader').style.display = 'none';
+                updateDebug('Ready - Point at calendar');
+            }, 1000);
+        });
+
+        // NFT detection events
+        window.addEventListener('load', () => {
+            // Hide loader after a timeout even if video doesn't load
+            setTimeout(() => {
+                document.querySelector('.arjs-loader').style.display = 'none';
+            }, 5000);
+        });
+
+        // Track NFT marker events
+        AFRAME.registerComponent('nft-listener', {
+            init: function () {
+                // Works for both marker and NFT
+                const tracker = document.querySelector('a-nft') || document.querySelector('a-marker');
+                
+                if (tracker) {
+                    tracker.addEventListener('markerFound', () => {
+                        console.log('Target detected! Starting animation...');
+                        document.querySelector('.instructions').innerHTML = '✨ Target found! Fixing spelling...';
+                        document.getElementById('status').style.display = 'block';
+                        updateDebug('Target detected - Animation playing');
+                        
+                        // Trigger haptic feedback
+                        if (navigator.vibrate) {
+                            navigator.vibrate(200);
+                        }
+                        
+                        // Play success sound
+                        playCorrectSound();
+                    });
+
+                    tracker.addEventListener('markerLost', () => {
+                        console.log('Target lost from view');
+                        document.querySelector('.instructions').innerHTML = '📷 Point your camera at the target';
+                        document.getElementById('status').style.display = 'none';
+                        updateDebug('Target lost - Keep it in view');
+                    });
+                }
+            }
+        });
+
+        // Add the component to the tracker element after scene loads
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const tracker = document.querySelector('a-nft') || document.querySelector('a-marker');
+                if (tracker) {
+                    tracker.setAttribute('nft-listener', '');
+                }
+            }, 1000);
+        });
+
+        // Sound effect
+        function playCorrectSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                // Play a pleasant chord progression
+                oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime); // C5
+                oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.1); // E5
+                oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.2); // G5
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                console.log('Could not play sound:', e);
+            }
+        }
+
+        // Show debug info with URL parameter ?debug=true
+        if (window.location.search.includes('debug=true')) {
+            document.getElementById('debug').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
