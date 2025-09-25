@@ -13,7 +13,7 @@
     <script>
         // Wait for A-Frame to be available
         window.addEventListener('DOMContentLoaded', function() {
-            // Register the marker handler component
+            // Only register if AFRAME exists (won't in preview, will on live site)
             if (typeof AFRAME !== 'undefined') {
                 AFRAME.registerComponent('marker-handler', {
                     init: function () {
@@ -22,8 +22,15 @@
                         
                         el.addEventListener('markerFound', () => {
                             console.log('Marker detected! Starting animation...');
-                            document.querySelector('.instructions').innerHTML = '✨ Marker found! Fixing spelling...';
-                            document.getElementById('status').style.display = 'block';
+                            const instructions = document.querySelector('.instructions');
+                            const status = document.getElementById('status');
+                            
+                            if (instructions) {
+                                instructions.innerHTML = '✨ Marker found! Fixing spelling...';
+                            }
+                            if (status) {
+                                status.style.display = 'block';
+                            }
                             
                             // Trigger haptic feedback
                             if (navigator.vibrate) {
@@ -31,16 +38,28 @@
                             }
                             
                             // Play sound
-                            playCorrectSound();
+                            if (typeof playCorrectSound === 'function') {
+                                playCorrectSound();
+                            }
                         });
 
                         el.addEventListener('markerLost', () => {
                             console.log('Marker lost from view');
-                            document.querySelector('.instructions').innerHTML = '📷 Point your camera at the target';
-                            document.getElementById('status').style.display = 'none';
+                            const instructions = document.querySelector('.instructions');
+                            const status = document.getElementById('status');
+                            
+                            if (instructions) {
+                                instructions.innerHTML = '📷 Point your camera at the target';
+                            }
+                            if (status) {
+                                status.style.display = 'none';
+                            }
                         });
                     }
                 });
+                console.log('Component registered successfully');
+            } else {
+                console.log('A-Frame not loaded yet - this is normal in preview');
             }
         });
         
